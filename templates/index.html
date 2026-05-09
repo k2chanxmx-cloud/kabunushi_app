@@ -34,9 +34,7 @@ body::before{
     padding:24px 18px 120px;
 }
 
-.header{
-    margin-bottom:24px;
-}
+.header{margin-bottom:24px}
 
 .header h1{
     margin:0;
@@ -50,19 +48,8 @@ body::before{
     font-size:13px;
 }
 
-.section{
-    display:none;
-    animation:fade .15s ease;
-}
-
-.section.active{
-    display:block;
-}
-
-@keyframes fade{
-    from{opacity:0; transform:translateY(6px)}
-    to{opacity:1; transform:translateY(0)}
-}
+.section{display:none}
+.section.active{display:block}
 
 .card{
     background:rgba(255,255,255,.08);
@@ -173,6 +160,13 @@ button{
     color:white;
     font-size:15px;
     font-weight:900;
+    cursor:pointer;
+}
+
+button.sub{
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:none;
 }
 
 .setting-row,.import-item{
@@ -201,6 +195,7 @@ button{
     margin-top:4px;
     color:#888;
     font-size:12px;
+    line-height:1.5;
 }
 
 .toggle{
@@ -222,6 +217,42 @@ button{
     border-radius:50%;
     background:white;
     transition:.2s;
+}
+
+.log{
+    padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.log:last-child{border-bottom:0}
+
+.log-status{
+    font-size:12px;
+    font-weight:900;
+    color:#76f2a4;
+}
+
+.log-status.error{
+    color:#ff8a8a;
+}
+
+.log-message{
+    margin-top:5px;
+    font-size:12px;
+    color:#ddd;
+    line-height:1.5;
+}
+
+.log-meta{
+    margin-top:5px;
+    font-size:11px;
+    color:#888;
+}
+
+.empty{
+    color:#aaa;
+    font-size:13px;
+    line-height:1.6;
 }
 
 .bottom-nav{
@@ -254,12 +285,6 @@ button{
     background:rgba(255,145,70,.24);
     color:white;
     font-weight:800;
-}
-
-.empty{
-    color:#aaa;
-    font-size:13px;
-    line-height:1.6;
 }
 </style>
 </head>
@@ -312,7 +337,8 @@ button{
                 <div class="ticket-name">{{ ticket.company }}</div>
                 <div class="ticket-meta">
                     期限：{{ ticket.expire_date if ticket.expire_date else "未設定" }}<br>
-                    カテゴリ：{{ ticket.category }}
+                    カテゴリ：{{ ticket.category }}<br>
+                    取得元：{{ ticket.source if ticket.source else "manual" }}
                 </div>
                 <div class="badge">登録済み</div>
             </div>
@@ -345,23 +371,75 @@ button{
 </div>
 
 <div id="import" class="section">
-    <div class="section-title">Gmail取込</div>
+    <div class="section-title">取込</div>
 
     <div class="card">
         <div class="import-item">
-            <div class="import-title">Gmail連携中</div>
-            <div class="import-sub">優待メール自動取得ON</div>
+            <div class="import-title">全自動チェック</div>
+            <div class="import-sub">
+                ドコモメールを確認 → 優待メールだけ専用Gmailへ転送 → GmailからDB登録します。
+            </div>
+        </div>
+
+        <form method="POST" action="/sync-all">
+            <button type="submit">ドコモ確認 → Gmail転送 → Gmail取込</button>
+        </form>
+
+        <form method="POST" action="/forward-docomo" style="margin-top:12px;">
+            <button type="submit" class="sub">ドコモメールだけ確認</button>
+        </form>
+
+        <form method="POST" action="/import-gmail" style="margin-top:12px;">
+            <button type="submit" class="sub">Gmailだけ取込</button>
+        </form>
+    </div>
+
+    <div class="section-title">連携状態</div>
+
+    <div class="card">
+        <div class="import-item">
+            <div class="import-title">ドコモメール</div>
+            <div class="import-sub">IMAPで読むだけ。ドコモ側は削除しません。</div>
         </div>
 
         <div class="import-item">
-            <div class="import-title">自動削除</div>
-            <div class="import-sub">関係ないメールは自動削除</div>
+            <div class="import-title">専用Gmail</div>
+            <div class="import-sub">Gmail APIで読み取り・不要メールはゴミ箱へ移動します。</div>
         </div>
 
         <div class="import-item">
-            <div class="import-title">最終取込</div>
-            <div class="import-sub">未実行</div>
+            <div class="import-title">DB保存</div>
+            <div class="import-sub">優待メールだけSupabaseへ登録します。</div>
         </div>
+    </div>
+
+    <div class="section-title">取込ログ</div>
+
+    <div class="card">
+        {% if import_logs %}
+            {% for log in import_logs %}
+            <div class="log">
+                <div class="log-status {% if log.status == 'error' %}error{% endif %}">
+                    {{ log.status }}
+                </div>
+
+                <div class="log-message">
+                    {{ log.message }}
+                </div>
+
+                <div class="log-meta">
+                    登録：{{ log.imported_count }}件 /
+                    転送：{{ log.forwarded_count }}件 /
+                    削除：{{ log.deleted_count }}件<br>
+                    {{ log.created_at }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">
+                まだ取込ログはありません。
+            </div>
+        {% endif %}
     </div>
 </div>
 
@@ -383,7 +461,7 @@ button{
         <div class="setting-row">
             <div>
                 <div class="setting-title">自動メール削除</div>
-                <div class="setting-sub">関係ないメールは自動削除</div>
+                <div class="setting-sub">削除対象は専用Gmail側のみ。ドコモメールは削除しません。</div>
             </div>
             <div style="color:#ffb36b;font-size:12px;font-weight:900;">常時ON</div>
         </div>
