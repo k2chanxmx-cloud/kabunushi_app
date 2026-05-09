@@ -6,9 +6,7 @@
   <title>株主優待 管理アプリ</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -28,9 +26,7 @@
       padding-bottom: 90px;
     }
 
-    .header {
-      margin-bottom: 18px;
-    }
+    .header { margin-bottom: 18px; }
 
     .header h1 {
       font-size: 26px;
@@ -83,24 +79,6 @@
       margin: 24px 0 12px;
     }
 
-    .alert-card {
-      border-color: rgba(255, 100, 100, 0.5);
-      background: linear-gradient(135deg, rgba(255,70,70,0.22), rgba(255,255,255,0.07));
-      margin-bottom: 12px;
-    }
-
-    .alert-title {
-      font-weight: 800;
-      color: #ffb0a0;
-      margin-bottom: 6px;
-    }
-
-    .alert-text {
-      color: #eee;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
     .ticket {
       display: flex;
       gap: 12px;
@@ -134,6 +112,7 @@
     .ticket-meta {
       color: #aaa;
       font-size: 12px;
+      line-height: 1.5;
     }
 
     .ticket-amount {
@@ -152,19 +131,7 @@
       color: #ddd;
     }
 
-    .badge.danger {
-      background: rgba(255, 80, 80, 0.22);
-      color: #ffb2a8;
-    }
-
-    .badge.safe {
-      background: rgba(90, 220, 150, 0.16);
-      color: #9af0bf;
-    }
-
-    .form-card {
-      margin-top: 12px;
-    }
+    .form-card { margin-top: 12px; }
 
     label {
       display: block;
@@ -184,13 +151,9 @@
       outline: none;
     }
 
-    input::placeholder {
-      color: #777;
-    }
+    input::placeholder { color: #777; }
 
-    select option {
-      color: #000;
-    }
+    select option { color: #000; }
 
     button {
       width: 100%;
@@ -206,32 +169,28 @@
       cursor: pointer;
     }
 
-    .history-item {
+    .mail-status {
       display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
       font-size: 13px;
+      color: #ccc;
     }
 
-    .history-item:last-child {
-      border-bottom: none;
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #76f2a4;
+      box-shadow: 0 0 12px rgba(118,242,164,0.8);
+      flex-shrink: 0;
     }
 
-    .history-left {
-      color: #eee;
-    }
-
-    .history-date {
-      color: #888;
-      font-size: 11px;
-      margin-top: 3px;
-    }
-
-    .history-amount {
-      font-weight: 800;
-      color: #ffb36b;
+    .mail-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .bottom-nav {
@@ -266,28 +225,10 @@
       font-weight: 700;
     }
 
-    .mail-status {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    .empty {
+      color: #aaa;
       font-size: 13px;
-      color: #ccc;
-    }
-
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #76f2a4;
-      box-shadow: 0 0 12px rgba(118,242,164,0.8);
-      flex-shrink: 0;
-    }
-
-    .mail-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -303,56 +244,52 @@
     <div class="summary">
       <div class="card summary-card">
         <div class="label">合計残高</div>
-        <div class="value">¥18,500</div>
-        <div class="sub">3社分</div>
+        <div class="value">¥{{ "{:,}".format(total_balance) }}</div>
+        <div class="sub">{{ ticket_count }}件分</div>
       </div>
 
       <div class="card summary-card">
-        <div class="label">期限間近</div>
-        <div class="value">2件</div>
-        <div class="sub">30日以内</div>
-      </div>
-    </div>
-
-    <div class="card alert-card">
-      <div class="alert-title">⚠ 期限が近い優待があります</div>
-      <div class="alert-text">
-        すかいらーく優待券があと12日で期限切れです。<br>
-        残高：¥3,000
+        <div class="label">登録済み</div>
+        <div class="value">{{ ticket_count }}件</div>
+        <div class="sub">フォーム追加対応</div>
       </div>
     </div>
 
     <div class="section-title">優待券一覧</div>
 
-    <div class="card ticket">
-      <div class="ticket-icon">🍽️</div>
-      <div class="ticket-main">
-        <div class="ticket-name">すかいらーく</div>
-        <div class="ticket-meta">期限：2026/05/21</div>
-        <span class="badge danger">あと12日</span>
-      </div>
-      <div class="ticket-amount">¥3,000</div>
-    </div>
+    {% if tickets %}
+      {% for ticket in tickets %}
+        <div class="card ticket">
+          <div class="ticket-icon">
+            {% if ticket.category == "飲食" %}
+              🍽️
+            {% elif ticket.category == "買い物" %}
+              🛒
+            {% elif ticket.category == "交通" %}
+              🚃
+            {% else %}
+              🎫
+            {% endif %}
+          </div>
 
-    <div class="card ticket">
-      <div class="ticket-icon">🛒</div>
-      <div class="ticket-main">
-        <div class="ticket-name">イオン</div>
-        <div class="ticket-meta">期限：2026/08/31</div>
-        <span class="badge safe">余裕あり</span>
-      </div>
-      <div class="ticket-amount">¥10,000</div>
-    </div>
+          <div class="ticket-main">
+            <div class="ticket-name">{{ ticket.company }}</div>
+            <div class="ticket-meta">
+              期限：{{ ticket.expire_date if ticket.expire_date else "未設定" }}<br>
+              カテゴリ：{{ ticket.category }}
+            </div>
+            <span class="badge">登録済み</span>
+          </div>
 
-    <div class="card ticket">
-      <div class="ticket-icon">☕</div>
-      <div class="ticket-main">
-        <div class="ticket-name">ドトール</div>
-        <div class="ticket-meta">期限：2026/06/05</div>
-        <span class="badge danger">あと27日</span>
+          <div class="ticket-amount">¥{{ "{:,}".format(ticket.balance) }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="card empty">
+        まだ優待券が登録されていません。<br>
+        下のフォームから追加してください。
       </div>
-      <div class="ticket-amount">¥5,500</div>
-    </div>
+    {% endif %}
 
     <div class="section-title">メール取込状況</div>
 
@@ -369,54 +306,26 @@
 
     <div class="section-title">手入力で追加</div>
 
-    <div class="card form-card">
+    <form class="card form-card" method="POST" action="/add">
       <label>会社名</label>
-      <input type="text" placeholder="例：すかいらーく" />
+      <input type="text" name="company" placeholder="例：すかいらーく" required />
 
       <label>残高</label>
-      <input type="number" placeholder="例：3000" />
+      <input type="number" name="balance" placeholder="例：3000" required />
 
       <label>有効期限</label>
-      <input type="date" />
+      <input type="date" name="expire_date" />
 
       <label>カテゴリ</label>
-      <select>
+      <select name="category">
         <option>飲食</option>
         <option>買い物</option>
         <option>交通</option>
         <option>その他</option>
       </select>
 
-      <button>優待券を追加</button>
-    </div>
-
-    <div class="section-title">使用履歴</div>
-
-    <div class="card">
-      <div class="history-item">
-        <div class="history-left">
-          すかいらーくで利用
-          <div class="history-date">2026/05/08</div>
-        </div>
-        <div class="history-amount">-¥1,000</div>
-      </div>
-
-      <div class="history-item">
-        <div class="history-left">
-          ドトールで利用
-          <div class="history-date">2026/05/02</div>
-        </div>
-        <div class="history-amount">-¥500</div>
-      </div>
-
-      <div class="history-item">
-        <div class="history-left">
-          イオン優待を追加
-          <div class="history-date">2026/04/28</div>
-        </div>
-        <div class="history-amount">+¥10,000</div>
-      </div>
-    </div>
+      <button type="submit">優待券を追加</button>
+    </form>
 
   </div>
 
