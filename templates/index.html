@@ -1,12 +1,28 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
 <title>株主優待管理</title>
 
+<link rel="manifest"
+      href="/static/manifest.json">
+
+<link rel="apple-touch-icon"
+      href="/static/icons/icon-192.png">
+
+<meta name="theme-color"
+      content="#0b0b12">
+
 <style>
-*{box-sizing:border-box}
+
+*{
+    box-sizing:border-box;
+}
 
 html,body{
     margin:0;
@@ -187,11 +203,6 @@ button{
     cursor:pointer;
 }
 
-button.sub{
-    background:rgba(255,255,255,.1);
-    border:1px solid rgba(255,255,255,.14);
-}
-
 .log-item{
     padding:14px 0;
     border-bottom:1px solid rgba(255,255,255,.08);
@@ -289,7 +300,9 @@ button.sub{
     color:white;
     font-weight:800;
 }
+
 </style>
+
 </head>
 
 <body>
@@ -297,8 +310,13 @@ button.sub{
 <div class="app">
 
 <div class="header">
+
     <h1>株主優待管理</h1>
-    <p>残高・期限・画像読込で管理</p>
+
+    <p>
+        残高・期限・画像読込で管理
+    </p>
+
 </div>
 
 
@@ -310,23 +328,35 @@ button.sub{
     <div class="summary">
 
         <div class="card">
-            <div class="summary-label">合計残高</div>
+
+            <div class="summary-label">
+                合計残高
+            </div>
+
             <div class="summary-value">
                 ¥{{ "{:,}".format(total_balance) }}
             </div>
+
             <div class="summary-sub">
                 {{ ticket_count }}件
             </div>
+
         </div>
 
         <div class="card">
-            <div class="summary-label">登録数</div>
+
+            <div class="summary-label">
+                登録数
+            </div>
+
             <div class="summary-value">
                 {{ ticket_count }}
             </div>
+
             <div class="summary-sub">
                 優待管理中
             </div>
+
         </div>
 
     </div>
@@ -379,16 +409,20 @@ button.sub{
                 </div>
 
                 <div class="ticket-meta">
+
                     期限：
                     {{ ticket.expire_date if ticket.expire_date else "未設定" }}
+
                     <br>
 
                     カテゴリ：
                     {{ ticket.category }}
+
                     <br>
 
                     メモ：
                     {{ ticket.memo if ticket.memo else "なし" }}
+
                 </div>
 
                 <div class="badge">
@@ -421,7 +455,6 @@ button.sub{
 
     {% endif %}
 
-
     <div class="section-title">
         手入力で追加
     </div>
@@ -446,11 +479,13 @@ button.sub{
                name="expire_date">
 
         <select name="category">
+
             <option>飲食</option>
             <option>買い物</option>
             <option>交通</option>
             <option>金券</option>
             <option>その他</option>
+
         </select>
 
         <textarea name="memo"
@@ -471,7 +506,7 @@ button.sub{
      class="section {% if ocr_text or ocr_candidates %}active{% endif %}">
 
     <div class="section-title">
-        スクショ読込
+        画像読込
     </div>
 
     <form class="card"
@@ -485,7 +520,7 @@ button.sub{
                required>
 
         <button type="submit">
-            スクショから残高を読み取る
+            画像から残高を読み取る
         </button>
 
     </form>
@@ -535,7 +570,7 @@ button.sub{
     {% if ocr_text %}
 
     <div class="section-title">
-        読込結果全文
+        読み取り結果
     </div>
 
     <div class="card">
@@ -630,6 +665,8 @@ button.sub{
 
 </div>
 
+</div>
+
 
 <script>
 
@@ -647,7 +684,8 @@ document.querySelectorAll(".nav-item").forEach(item=>{
             nav.classList.remove("active");
         });
 
-        document.getElementById(target).classList.add("active");
+        document.getElementById(target)
+            .classList.add("active");
 
         item.classList.add("active");
 
@@ -671,7 +709,8 @@ function useAmount(value){
         nav.classList.remove("active");
     });
 
-    document.getElementById("tickets").classList.add("active");
+    document.getElementById("tickets")
+        .classList.add("active");
 
     document.querySelector('[data-target="tickets"]')
         .classList.add("active");
@@ -683,6 +722,19 @@ function useAmount(value){
     window.scrollTo({
         top:document.body.scrollHeight,
         behavior:"smooth"
+    });
+
+}
+
+
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", ()=>{
+
+        navigator.serviceWorker.register(
+            "/static/service-worker.js"
+        );
+
     });
 
 }
