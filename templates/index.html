@@ -298,7 +298,7 @@ button.sub{
 
 <div class="header">
     <h1>株主優待管理</h1>
-    <p>残高・期限・スクショOCRで管理</p>
+    <p>残高・期限・画像読込で管理</p>
 </div>
 
 
@@ -471,7 +471,7 @@ button.sub{
      class="section {% if ocr_text or ocr_candidates %}active{% endif %}">
 
     <div class="section-title">
-        スクショOCR
+        スクショ読込
     </div>
 
     <form class="card"
@@ -535,7 +535,7 @@ button.sub{
     {% if ocr_text %}
 
     <div class="section-title">
-        OCR全文
+        読込結果全文
     </div>
 
     <div class="card">
@@ -616,7 +616,7 @@ button.sub{
          data-target="ocr">
 
         📷<br>
-        OCR
+        画像読込
 
     </div>
 
