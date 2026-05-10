@@ -1,15 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import os
 import re
 import json
-import base64
+from flask import Flask, render_template, request, redirect, url_for
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 from google.cloud import vision
 from google.oauth2 import service_account
-from pywebpush import webpush
-from cryptography.hazmat.primitives import serialization
 
 load_dotenv()
 
@@ -17,9 +14,6 @@ app = Flask(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 GOOGLE_VISION_CREDENTIALS_JSON = os.environ.get("GOOGLE_VISION_CREDENTIALS_JSON")
-VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY")
-VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY")
-VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT")
 
 
 def get_conn():
@@ -41,25 +35,14 @@ def init_db():
                 );
             """)
 
+            cur.execute("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS memo TEXT;")
+
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS logs (
                     id SERIAL PRIMARY KEY,
                     message TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
-            """)
-
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS push_subscriptions (
-                    id SERIAL PRIMARY KEY,
-                    subscription JSONB NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-
-            cur.execute("""
-                ALTER TABLE tickets
-                ADD COLUMN IF NOT EXISTS memo TEXT;
             """)
 
         conn.commit()
@@ -71,10 +54,11 @@ def before_request():
 
 
 def get_vision_client():
+    if not GOOGLE_VISION_CREDENTIALS_JSON:
+        raise Exception("GOOGLE_VISION_CREDENTIALS_JSON が未設定です")
+
     info = json.loads(GOOGLE_VISION_CREDENTIALS_JSON)
-
     credentials = service_account.Credentials.from_service_account_info(info)
-
     return vision.ImageAnnotatorClient(credentials=credentials)
 
 
@@ -105,76 +89,19 @@ def extract_amount_candidates(text):
     return candidates
 
 
-def vapid_public_key_to_urlsafe(pem):
-    if not pem:
-        return ""
-
-    public_key = serialization.load_pem_public_key(
-        pem.encode("utf-8")
-    )
-
-    raw = public_key.public_bytes(
-        encoding=serialization.Encoding.X962,
-        format=serialization.PublicFormat.UncompressedPoint
-    )
-
-    return base64.urlsafe_b64encode(raw).decode("utf-8").rstrip("=")
-
-
-def send_push_notification(title, body):
-    with get_conn() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute("""
-                SELECT subscription
-                FROM push_subscriptions;
-            """)
-            rows = cur.fetchall()
-
-    for row in rows:
-        subscription = row["subscription"]
-
-        try:
-            webpush(
-                subscription_info=subscription,
-                data=json.dumps({
-                    "title": title,
-                    "body": body
-                }),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims={
-                    "sub": VAPID_SUBJECT
-                }
-            )
-        except Exception as e:
-            print(e)
-
-
 @app.route("/")
 def home():
     with get_conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                SELECT
-                    id,
-                    company,
-                    balance,
-                    expire_date,
-                    category,
-                    memo,
-                    created_at
+                SELECT id, company, balance, expire_date, category, memo, created_at
                 FROM tickets
-                ORDER BY
-                    expire_date IS NULL,
-                    expire_date ASC,
-                    id DESC;
+                ORDER BY expire_date IS NULL, expire_date ASC, id DESC;
             """)
             tickets = cur.fetchall()
 
             cur.execute("""
-                SELECT
-                    id,
-                    message,
-                    created_at
+                SELECT id, message, created_at
                 FROM logs
                 ORDER BY id DESC
                 LIMIT 20;
@@ -191,8 +118,7 @@ def home():
         ticket_count=ticket_count,
         logs=logs,
         ocr_text=None,
-        ocr_candidates=[],
-        vapid_public_key=vapid_public_key_to_urlsafe(VAPID_PUBLIC_KEY)
+        ocr_candidates=[]
     )
 
 
@@ -218,28 +144,14 @@ def add_ticket():
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO tickets (
-                    company,
-                    balance,
-                    expire_date,
-                    category,
-                    memo
-                )
+                INSERT INTO tickets (company, balance, expire_date, category, memo)
                 VALUES (%s, %s, %s, %s, %s);
-            """, (
-                company,
-                balance,
-                expire_date,
-                category,
-                memo
-            ))
+            """, (company, balance, expire_date, category, memo))
 
             cur.execute("""
                 INSERT INTO logs (message)
                 VALUES (%s);
-            """, (
-                f"{company} を登録しました",
-            ))
+            """, (f"{company} を登録しました",))
 
         conn.commit()
 
@@ -250,26 +162,17 @@ def add_ticket():
 def delete_ticket(ticket_id):
     with get_conn() as conn:
         with conn.cursor() as cur:
-            cur.execute("""
-                SELECT company
-                FROM tickets
-                WHERE id = %s;
-            """, (ticket_id,))
-
+            cur.execute("SELECT company FROM tickets WHERE id = %s;", (ticket_id,))
             row = cur.fetchone()
+
             company_name = row[0] if row else "優待"
 
-            cur.execute("""
-                DELETE FROM tickets
-                WHERE id = %s;
-            """, (ticket_id,))
+            cur.execute("DELETE FROM tickets WHERE id = %s;", (ticket_id,))
 
             cur.execute("""
                 INSERT INTO logs (message)
                 VALUES (%s);
-            """, (
-                f"{company_name} を削除しました",
-            ))
+            """, (f"{company_name} を削除しました",))
 
         conn.commit()
 
@@ -286,13 +189,14 @@ def ocr_upload():
     image_bytes = file.read()
 
     client = get_vision_client()
-
     image = vision.Image(content=image_bytes)
 
     response = client.text_detection(image=image)
 
-    texts = response.text_annotations
+    if response.error.message:
+        raise Exception(response.error.message)
 
+    texts = response.text_annotations
     ocr_text = texts[0].description if texts else ""
 
     candidates = extract_amount_candidates(ocr_text)
@@ -300,27 +204,14 @@ def ocr_upload():
     with get_conn() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("""
-                SELECT
-                    id,
-                    company,
-                    balance,
-                    expire_date,
-                    category,
-                    memo,
-                    created_at
+                SELECT id, company, balance, expire_date, category, memo, created_at
                 FROM tickets
-                ORDER BY
-                    expire_date IS NULL,
-                    expire_date ASC,
-                    id DESC;
+                ORDER BY expire_date IS NULL, expire_date ASC, id DESC;
             """)
             tickets = cur.fetchall()
 
             cur.execute("""
-                SELECT
-                    id,
-                    message,
-                    created_at
+                SELECT id, message, created_at
                 FROM logs
                 ORDER BY id DESC
                 LIMIT 20;
@@ -337,40 +228,8 @@ def ocr_upload():
         ticket_count=ticket_count,
         logs=logs,
         ocr_text=ocr_text,
-        ocr_candidates=candidates,
-        vapid_public_key=vapid_public_key_to_urlsafe(VAPID_PUBLIC_KEY)
+        ocr_candidates=candidates
     )
-
-
-@app.route("/save-subscription", methods=["POST"])
-def save_subscription():
-    data = request.get_json()
-
-    if not data:
-        return {"ok": False, "error": "subscription data is empty"}, 400
-
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO push_subscriptions (subscription)
-                VALUES (%s);
-            """, (
-                json.dumps(data),
-            ))
-
-        conn.commit()
-
-    return {"ok": True}
-
-
-@app.route("/test-notification")
-def test_notification():
-    send_push_notification(
-        "株主優待管理",
-        "通知テストです"
-    )
-
-    return {"ok": True}
 
 
 if __name__ == "__main__":
