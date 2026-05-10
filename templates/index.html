@@ -138,7 +138,16 @@ body::before{
     font-size:11px;
 }
 
-input,select{
+.delete-link{
+    display:inline-block;
+    margin-top:8px;
+    color:#ff9a9a;
+    font-size:12px;
+    text-decoration:none;
+    font-weight:700;
+}
+
+input,select,textarea{
     width:100%;
     padding:14px;
     border-radius:15px;
@@ -147,6 +156,12 @@ input,select{
     color:white;
     margin:7px 0 14px;
     outline:none;
+    font-family:inherit;
+}
+
+textarea{
+    min-height:86px;
+    resize:vertical;
 }
 
 select option{color:#000}
@@ -163,13 +178,7 @@ button{
     cursor:pointer;
 }
 
-button.sub{
-    background:rgba(255,255,255,.1);
-    border:1px solid rgba(255,255,255,.14);
-    box-shadow:none;
-}
-
-.setting-row,.import-item{
+.setting-row,.log-item{
     padding:14px 0;
     border-bottom:1px solid rgba(255,255,255,.08);
 }
@@ -182,16 +191,16 @@ button.sub{
 }
 
 .setting-row:last-child,
-.import-item:last-child{
+.log-item:last-child{
     border-bottom:0;
 }
 
-.setting-title,.import-title{
+.setting-title,.log-title{
     font-weight:800;
     font-size:14px;
 }
 
-.setting-sub,.import-sub{
+.setting-sub,.log-sub{
     margin-top:4px;
     color:#888;
     font-size:12px;
@@ -217,36 +226,6 @@ button.sub{
     border-radius:50%;
     background:white;
     transition:.2s;
-}
-
-.log{
-    padding:12px 0;
-    border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.log:last-child{border-bottom:0}
-
-.log-status{
-    font-size:12px;
-    font-weight:900;
-    color:#76f2a4;
-}
-
-.log-status.error{
-    color:#ff8a8a;
-}
-
-.log-message{
-    margin-top:5px;
-    font-size:12px;
-    color:#ddd;
-    line-height:1.5;
-}
-
-.log-meta{
-    margin-top:5px;
-    font-size:11px;
-    color:#888;
 }
 
 .empty{
@@ -295,10 +274,11 @@ button.sub{
 
 <div class="header">
     <h1>株主優待管理</h1>
-    <p>残高・期限・取込をまとめて管理</p>
+    <p>残高・期限を手入力でまとめて管理</p>
 </div>
 
 <div id="home" class="section active">
+
     <div class="summary">
         <div class="card">
             <div class="summary-label">合計残高</div>
@@ -314,12 +294,15 @@ button.sub{
     </div>
 
     <div class="section-title">期限アラート</div>
+
     <div class="card empty">
-        期限が近い優待がある場合、ここに表示します。
+        登録した優待券は、期限が近い順に「優待」タブへ表示されます。
     </div>
+
 </div>
 
 <div id="tickets" class="section">
+
     <div class="section-title">優待一覧</div>
 
     {% if tickets %}
@@ -329,18 +312,31 @@ button.sub{
                 {% if ticket.category == "飲食" %}🍽️
                 {% elif ticket.category == "買い物" %}🛒
                 {% elif ticket.category == "交通" %}🚃
+                {% elif ticket.category == "金券" %}💴
                 {% else %}🎫
                 {% endif %}
             </div>
 
             <div class="ticket-main">
                 <div class="ticket-name">{{ ticket.company }}</div>
+
                 <div class="ticket-meta">
                     期限：{{ ticket.expire_date if ticket.expire_date else "未設定" }}<br>
                     カテゴリ：{{ ticket.category }}<br>
-                    取得元：{{ ticket.source if ticket.source else "manual" }}
+                    {% if ticket.memo %}
+                    メモ：{{ ticket.memo }}
+                    {% else %}
+                    メモ：なし
+                    {% endif %}
                 </div>
+
                 <div class="badge">登録済み</div>
+
+                <a class="delete-link"
+                   href="/delete/{{ ticket.id }}"
+                   onclick="return confirm('この優待を削除しますか？');">
+                    削除する
+                </a>
             </div>
 
             <div class="ticket-amount">¥{{ "{:,}".format(ticket.balance) }}</div>
@@ -348,102 +344,58 @@ button.sub{
         {% endfor %}
     {% else %}
         <div class="card empty">
-            まだ優待券が登録されていません。
+            まだ優待券が登録されていません。<br>
+            下のフォームから追加してください。
         </div>
     {% endif %}
 
     <div class="section-title">手入力で追加</div>
 
     <form class="card" method="POST" action="/add">
-        <input type="text" name="company" placeholder="会社名" required>
-        <input type="number" name="balance" placeholder="残高" required>
+        <input type="text" name="company" placeholder="会社名・優待名" required>
+
+        <input type="number" name="balance" placeholder="残高・金額" required>
+
         <input type="date" name="expire_date">
 
         <select name="category">
             <option>飲食</option>
             <option>買い物</option>
             <option>交通</option>
+            <option>金券</option>
             <option>その他</option>
         </select>
 
+        <textarea name="memo" placeholder="メモ 例：父の分 / アプリ内残高 / 使用条件など"></textarea>
+
         <button type="submit">優待券を追加</button>
     </form>
+
 </div>
 
-<div id="import" class="section">
-    <div class="section-title">取込</div>
+<div id="logs" class="section">
+
+    <div class="section-title">履歴</div>
 
     <div class="card">
-        <div class="import-item">
-            <div class="import-title">全自動チェック</div>
-            <div class="import-sub">
-                ドコモメールを確認 → 優待メールだけ専用Gmailへ転送 → GmailからDB登録します。
-            </div>
-        </div>
-
-        <form method="POST" action="/sync-all">
-            <button type="submit">ドコモ確認 → Gmail転送 → Gmail取込</button>
-        </form>
-
-        <form method="POST" action="/forward-docomo" style="margin-top:12px;">
-            <button type="submit" class="sub">ドコモメールだけ確認</button>
-        </form>
-
-        <form method="POST" action="/import-gmail" style="margin-top:12px;">
-            <button type="submit" class="sub">Gmailだけ取込</button>
-        </form>
-    </div>
-
-    <div class="section-title">連携状態</div>
-
-    <div class="card">
-        <div class="import-item">
-            <div class="import-title">ドコモメール</div>
-            <div class="import-sub">IMAPで読むだけ。ドコモ側は削除しません。</div>
-        </div>
-
-        <div class="import-item">
-            <div class="import-title">専用Gmail</div>
-            <div class="import-sub">Gmail APIで読み取り・不要メールはゴミ箱へ移動します。</div>
-        </div>
-
-        <div class="import-item">
-            <div class="import-title">DB保存</div>
-            <div class="import-sub">優待メールだけSupabaseへ登録します。</div>
-        </div>
-    </div>
-
-    <div class="section-title">取込ログ</div>
-
-    <div class="card">
-        {% if import_logs %}
-            {% for log in import_logs %}
-            <div class="log">
-                <div class="log-status {% if log.status == 'error' %}error{% endif %}">
-                    {{ log.status }}
-                </div>
-
-                <div class="log-message">
-                    {{ log.message }}
-                </div>
-
-                <div class="log-meta">
-                    登録：{{ log.imported_count }}件 /
-                    転送：{{ log.forwarded_count }}件 /
-                    削除：{{ log.deleted_count }}件<br>
-                    {{ log.created_at }}
-                </div>
+        {% if logs %}
+            {% for log in logs %}
+            <div class="log-item">
+                <div class="log-title">{{ log.message }}</div>
+                <div class="log-sub">{{ log.created_at }}</div>
             </div>
             {% endfor %}
         {% else %}
             <div class="empty">
-                まだ取込ログはありません。
+                まだ履歴はありません。
             </div>
         {% endif %}
     </div>
+
 </div>
 
 <div id="settings" class="section">
+
     <div class="section-title">設定</div>
 
     <div class="card">
@@ -460,20 +412,21 @@ button.sub{
 
         <div class="setting-row">
             <div>
-                <div class="setting-title">自動メール削除</div>
-                <div class="setting-sub">削除対象は専用Gmail側のみ。ドコモメールは削除しません。</div>
+                <div class="setting-title">保存先</div>
+                <div class="setting-sub">Supabase PostgreSQL に保存中</div>
             </div>
-            <div style="color:#ffb36b;font-size:12px;font-weight:900;">常時ON</div>
+            <div style="color:#76f2a4;font-size:12px;font-weight:900;">接続中</div>
         </div>
 
         <div class="setting-row">
             <div>
-                <div class="setting-title">Gmail連携</div>
-                <div class="setting-sub">Gmail API接続中</div>
+                <div class="setting-title">メール取込</div>
+                <div class="setting-sub">現在は未使用。手入力管理モードです。</div>
             </div>
-            <div style="color:#76f2a4;font-size:12px;font-weight:900;">接続中</div>
+            <div style="color:#ffb36b;font-size:12px;font-weight:900;">OFF</div>
         </div>
     </div>
+
 </div>
 
 </div>
@@ -481,7 +434,7 @@ button.sub{
 <div class="bottom-nav">
     <div class="nav-item active" data-target="home">🏠<br>ホーム</div>
     <div class="nav-item" data-target="tickets">🎫<br>優待</div>
-    <div class="nav-item" data-target="import">📩<br>取込</div>
+    <div class="nav-item" data-target="logs">📝<br>履歴</div>
     <div class="nav-item" data-target="settings">⚙️<br>設定</div>
 </div>
 
