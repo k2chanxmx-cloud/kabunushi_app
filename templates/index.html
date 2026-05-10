@@ -361,14 +361,6 @@ button{
 
     </div>
 
-    <div class="section-title">
-        期限アラート
-    </div>
-
-    <div class="card empty">
-        登録した優待券は、期限が近い順に表示されます。
-    </div>
-
 </div>
 
 
@@ -447,55 +439,7 @@ button{
 
         {% endfor %}
 
-    {% else %}
-
-        <div class="card empty">
-            まだ優待券が登録されていません。
-        </div>
-
     {% endif %}
-
-    <div class="section-title">
-        手入力で追加
-    </div>
-
-    <form class="card"
-          method="POST"
-          action="/add">
-
-        <input id="companyInput"
-               type="text"
-               name="company"
-               placeholder="会社名・優待名"
-               required>
-
-        <input id="balanceInput"
-               type="number"
-               name="balance"
-               placeholder="残高・金額"
-               required>
-
-        <input type="date"
-               name="expire_date">
-
-        <select name="category">
-
-            <option>飲食</option>
-            <option>買い物</option>
-            <option>交通</option>
-            <option>金券</option>
-            <option>その他</option>
-
-        </select>
-
-        <textarea name="memo"
-                  placeholder="メモ 例：Toyota Wallet / dポイント / Vポイント"></textarea>
-
-        <button type="submit">
-            優待券を追加
-        </button>
-
-    </form>
 
 </div>
 
@@ -524,64 +468,6 @@ button{
         </button>
 
     </form>
-
-
-    {% if ocr_candidates %}
-
-    <div class="section-title">
-        読み取り候補
-    </div>
-
-    <div class="card">
-
-        {% for c in ocr_candidates %}
-
-        <div class="candidate">
-
-            <div>
-
-                <div class="candidate-value">
-                    {{ c.display }}
-                </div>
-
-                <div class="candidate-raw">
-                    {{ c.raw }}
-                </div>
-
-            </div>
-
-            <button class="use-btn"
-                    type="button"
-                    onclick="useAmount('{{ c.value }}')">
-
-                使う
-
-            </button>
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-    {% endif %}
-
-
-    {% if ocr_text %}
-
-    <div class="section-title">
-        読み取り結果
-    </div>
-
-    <div class="card">
-
-        <div class="ocr-text">
-            {{ ocr_text }}
-        </div>
-
-    </div>
-
-    {% endif %}
 
 </div>
 
@@ -629,12 +515,6 @@ button{
 
             {% endfor %}
 
-        {% else %}
-
-            <div class="empty">
-                まだ履歴はありません。
-            </div>
-
         {% endif %}
 
     </div>
@@ -646,7 +526,7 @@ button{
 
 <div class="bottom-nav">
 
-    <div class="nav-item {% if not ocr_text and not ocr_candidates %}active{% endif %}"
+    <div class="nav-item active"
          data-target="home">
 
         🏠<br>
@@ -662,7 +542,7 @@ button{
 
     </div>
 
-    <div class="nav-item {% if ocr_text or ocr_candidates %}active{% endif %}"
+    <div class="nav-item"
          data-target="ocr">
 
         📷<br>
@@ -704,49 +584,16 @@ document.querySelectorAll(".nav-item").forEach(item=>{
 
         item.classList.add("active");
 
-        window.scrollTo({
-            top:0,
-            behavior:"smooth"
-        });
-
     });
 
 });
-
-
-function useAmount(value){
-
-    document.querySelectorAll(".section").forEach(section=>{
-        section.classList.remove("active");
-    });
-
-    document.querySelectorAll(".nav-item").forEach(nav=>{
-        nav.classList.remove("active");
-    });
-
-    document.getElementById("tickets")
-        .classList.add("active");
-
-    document.querySelector('[data-target="tickets"]')
-        .classList.add("active");
-
-    document.getElementById("balanceInput").value = value;
-
-    document.getElementById("companyInput").focus();
-
-    window.scrollTo({
-        top:document.body.scrollHeight,
-        behavior:"smooth"
-    });
-
-}
 
 
 async function subscribePush() {
 
     if (!("serviceWorker" in navigator)) {
 
-        alert("この端末は通知未対応です");
+        alert("通知未対応端末");
         return;
 
     }
@@ -771,7 +618,7 @@ async function subscribePush() {
 
             applicationServerKey:
                 urlBase64ToUint8Array(
-                    "{{ vapid_public_key }}"
+                    {{ vapid_public_key | tojson }}
                 )
 
         });

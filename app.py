@@ -4,6 +4,7 @@ from psycopg2.extras import RealDictCursor
 import os
 import re
 import json
+import base64
 from dotenv import load_dotenv
 from google.cloud import vision
 from google.oauth2 import service_account
@@ -50,8 +51,6 @@ def init_db():
 
         with conn.cursor() as cur:
 
-            # tickets
-
             cur.execute("""
 
                 CREATE TABLE IF NOT EXISTS tickets (
@@ -78,8 +77,6 @@ def init_db():
                 ADD COLUMN IF NOT EXISTS memo TEXT;
             """)
 
-            # logs
-
             cur.execute("""
 
                 CREATE TABLE IF NOT EXISTS logs (
@@ -92,8 +89,6 @@ def init_db():
                 );
 
             """)
-
-            # push subscriptions
 
             cur.execute("""
 
@@ -186,6 +181,36 @@ def extract_amount_candidates(text):
                 })
 
     return candidates
+
+
+# =========================================
+# VAPID
+# =========================================
+
+def vapid_public_key_to_urlsafe(pem):
+
+    if not pem:
+        return ""
+
+    lines = [
+
+        line.strip()
+
+        for line in pem.splitlines()
+
+        if "BEGIN PUBLIC KEY" not in line
+        and "END PUBLIC KEY" not in line
+        and line.strip()
+
+    ]
+
+    b64 = "".join(lines)
+
+    raw = base64.b64decode(b64)
+
+    return base64.urlsafe_b64encode(raw)\
+        .decode("utf-8")\
+        .rstrip("=")
 
 
 # =========================================
@@ -317,7 +342,10 @@ def home():
 
         ocr_candidates=[],
 
-        vapid_public_key=VAPID_PUBLIC_KEY
+        vapid_public_key=
+            vapid_public_key_to_urlsafe(
+                VAPID_PUBLIC_KEY
+            )
 
     )
 
@@ -572,7 +600,10 @@ def ocr_upload():
 
         ocr_candidates=candidates,
 
-        vapid_public_key=VAPID_PUBLIC_KEY
+        vapid_public_key=
+            vapid_public_key_to_urlsafe(
+                VAPID_PUBLIC_KEY
+            )
 
     )
 
