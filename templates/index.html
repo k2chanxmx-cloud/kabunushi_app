@@ -203,72 +203,6 @@ button{
     cursor:pointer;
 }
 
-.log-item{
-    padding:14px 0;
-    border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.log-item:last-child{
-    border-bottom:0;
-}
-
-.log-title{
-    font-weight:800;
-    font-size:14px;
-}
-
-.log-sub{
-    margin-top:4px;
-    color:#888;
-    font-size:12px;
-}
-
-.empty{
-    color:#aaa;
-    font-size:13px;
-    line-height:1.6;
-}
-
-.ocr-text{
-    white-space:pre-wrap;
-    color:#ddd;
-    font-size:12px;
-    line-height:1.5;
-    max-height:180px;
-    overflow:auto;
-}
-
-.candidate{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    padding:12px 0;
-    border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.candidate:last-child{
-    border-bottom:0;
-}
-
-.candidate-value{
-    font-size:18px;
-    font-weight:900;
-}
-
-.candidate-raw{
-    color:#888;
-    font-size:11px;
-    margin-top:4px;
-}
-
-.use-btn{
-    width:auto;
-    padding:9px 12px;
-    font-size:12px;
-    border-radius:999px;
-}
-
 .bottom-nav{
     position:fixed;
     left:50%;
@@ -322,8 +256,7 @@ button{
 
 <!-- HOME -->
 
-<div id="home"
-     class="section {% if not ocr_text and not ocr_candidates %}active{% endif %}">
+<div id="home" class="section active">
 
     <div class="summary">
 
@@ -364,114 +297,6 @@ button{
 </div>
 
 
-<!-- TICKETS -->
-
-<div id="tickets" class="section">
-
-    <div class="section-title">
-        優待一覧
-    </div>
-
-    {% if tickets %}
-
-        {% for ticket in tickets %}
-
-        <div class="card ticket">
-
-            <div class="ticket-icon">
-
-                {% if ticket.category == "飲食" %}
-                    🍽️
-                {% elif ticket.category == "買い物" %}
-                    🛒
-                {% elif ticket.category == "交通" %}
-                    🚃
-                {% elif ticket.category == "金券" %}
-                    💴
-                {% else %}
-                    🎫
-                {% endif %}
-
-            </div>
-
-            <div class="ticket-main">
-
-                <div class="ticket-name">
-                    {{ ticket.company }}
-                </div>
-
-                <div class="ticket-meta">
-
-                    期限：
-                    {{ ticket.expire_date if ticket.expire_date else "未設定" }}
-
-                    <br>
-
-                    カテゴリ：
-                    {{ ticket.category }}
-
-                    <br>
-
-                    メモ：
-                    {{ ticket.memo if ticket.memo else "なし" }}
-
-                </div>
-
-                <div class="badge">
-                    登録済み
-                </div>
-
-                <a class="delete-link"
-                   href="/delete/{{ ticket.id }}"
-                   onclick="return confirm('この優待を削除しますか？');">
-
-                    削除する
-
-                </a>
-
-            </div>
-
-            <div class="ticket-amount">
-                ¥{{ "{:,}".format(ticket.balance) }}
-            </div>
-
-        </div>
-
-        {% endfor %}
-
-    {% endif %}
-
-</div>
-
-
-<!-- OCR -->
-
-<div id="ocr"
-     class="section {% if ocr_text or ocr_candidates %}active{% endif %}">
-
-    <div class="section-title">
-        画像読込
-    </div>
-
-    <form class="card"
-          method="POST"
-          action="/ocr"
-          enctype="multipart/form-data">
-
-        <input type="file"
-               name="screenshot"
-               accept="image/*"
-               required>
-
-        <button type="submit">
-            画像から残高を読み取る
-        </button>
-
-    </form>
-
-</div>
-
-
 <!-- PUSH -->
 
 <div class="card">
@@ -480,44 +305,9 @@ button{
         通知
     </div>
 
-    <button onclick="subscribePush()">
+    <button id="pushButton" type="button">
         通知を有効化
     </button>
-
-</div>
-
-
-<!-- LOGS -->
-
-<div id="logs" class="section">
-
-    <div class="section-title">
-        履歴
-    </div>
-
-    <div class="card">
-
-        {% if logs %}
-
-            {% for log in logs %}
-
-            <div class="log-item">
-
-                <div class="log-title">
-                    {{ log.message }}
-                </div>
-
-                <div class="log-sub">
-                    {{ log.created_at }}
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        {% endif %}
-
-    </div>
 
 </div>
 
@@ -534,30 +324,6 @@ button{
 
     </div>
 
-    <div class="nav-item"
-         data-target="tickets">
-
-        🎫<br>
-        優待
-
-    </div>
-
-    <div class="nav-item"
-         data-target="ocr">
-
-        📷<br>
-        画像読込
-
-    </div>
-
-    <div class="nav-item"
-         data-target="logs">
-
-        📝<br>
-        履歴
-
-    </div>
-
 </div>
 
 </div>
@@ -565,77 +331,99 @@ button{
 
 <script>
 
-document.querySelectorAll(".nav-item").forEach(item=>{
+document.addEventListener("DOMContentLoaded", () => {
 
-    item.addEventListener("click",()=>{
+    const pushButton =
+        document.getElementById("pushButton");
 
-        const target = item.dataset.target;
+    if (pushButton) {
 
-        document.querySelectorAll(".section").forEach(section=>{
-            section.classList.remove("active");
-        });
+        pushButton.addEventListener(
+            "click",
+            subscribePush
+        );
 
-        document.querySelectorAll(".nav-item").forEach(nav=>{
-            nav.classList.remove("active");
-        });
-
-        document.getElementById(target)
-            .classList.add("active");
-
-        item.classList.add("active");
-
-    });
+    }
 
 });
 
 
 async function subscribePush() {
 
-    if (!("serviceWorker" in navigator)) {
+    alert("通知設定を開始します");
 
-        alert("通知未対応端末");
-        return;
+    try {
+
+        if (!("serviceWorker" in navigator)) {
+
+            alert("Service Worker未対応");
+            return;
+
+        }
+
+        if (!("Notification" in window)) {
+
+            alert("通知未対応ブラウザ");
+            return;
+
+        }
+
+        const permission =
+            await Notification.requestPermission();
+
+        if (permission !== "granted") {
+
+            alert("通知が拒否されました");
+            return;
+
+        }
+
+        const registration =
+            await navigator.serviceWorker.ready;
+
+        const subscription =
+            await registration.pushManager.subscribe({
+
+                userVisibleOnly: true,
+
+                applicationServerKey:
+                    urlBase64ToUint8Array(
+                        {{ vapid_public_key | tojson }}
+                    )
+
+            });
+
+        const res = await fetch(
+            "/save-subscription",
+            {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(subscription)
+
+            }
+        );
+
+        if (!res.ok) {
+
+            alert("通知保存失敗");
+            return;
+
+        }
+
+        alert("通知を有効化しました！");
+
+    } catch (e) {
+
+        alert("通知設定エラー: " + e.message);
+
+        console.error(e);
 
     }
-
-    const registration =
-        await navigator.serviceWorker.ready;
-
-    const permission =
-        await Notification.requestPermission();
-
-    if (permission !== "granted") {
-
-        alert("通知が拒否されました");
-        return;
-
-    }
-
-    const subscription =
-        await registration.pushManager.subscribe({
-
-            userVisibleOnly: true,
-
-            applicationServerKey:
-                urlBase64ToUint8Array(
-                    {{ vapid_public_key | tojson }}
-                )
-
-        });
-
-    await fetch("/save-subscription", {
-
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify(subscription)
-
-    });
-
-    alert("通知を有効化しました！");
 
 }
 
