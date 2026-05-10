@@ -7,7 +7,6 @@
 
 <style>
 *{box-sizing:border-box}
-
 html,body{
     margin:0;
     min-height:100%;
@@ -15,7 +14,6 @@ html,body{
     color:white;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
-
 body::before{
     content:"";
     position:fixed;
@@ -26,31 +24,17 @@ body::before{
         radial-gradient(circle at 80% 85%, rgba(255,80,80,.12), transparent 34%),
         linear-gradient(180deg,#0b0b12,#07070b);
 }
-
 .app{
     width:100%;
     max-width:430px;
     margin:0 auto;
     padding:24px 18px 120px;
 }
-
 .header{margin-bottom:24px}
-
-.header h1{
-    margin:0;
-    font-size:28px;
-    font-weight:900;
-}
-
-.header p{
-    margin:8px 0 0;
-    color:#aaa;
-    font-size:13px;
-}
-
+.header h1{margin:0;font-size:28px;font-weight:900}
+.header p{margin:8px 0 0;color:#aaa;font-size:13px}
 .section{display:none}
 .section.active{display:block}
-
 .card{
     background:rgba(255,255,255,.08);
     border:1px solid rgba(255,255,255,.12);
@@ -60,42 +44,24 @@ body::before{
     box-shadow:0 12px 30px rgba(0,0,0,.28);
     backdrop-filter:blur(14px);
 }
-
 .summary{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:12px;
 }
-
-.summary-label{
-    color:#aaa;
-    font-size:12px;
-    margin-bottom:8px;
-}
-
-.summary-value{
-    font-size:26px;
-    font-weight:900;
-}
-
-.summary-sub{
-    margin-top:5px;
-    color:#ffb36b;
-    font-size:12px;
-}
-
+.summary-label{color:#aaa;font-size:12px;margin-bottom:8px}
+.summary-value{font-size:26px;font-weight:900}
+.summary-sub{margin-top:5px;color:#ffb36b;font-size:12px}
 .section-title{
     margin:26px 0 12px;
     font-size:17px;
     font-weight:800;
 }
-
 .ticket{
     display:flex;
     gap:12px;
     align-items:center;
 }
-
 .ticket-icon{
     width:54px;
     height:54px;
@@ -106,29 +72,10 @@ body::before{
     background:linear-gradient(135deg,#ff9a3d,#ff5f57);
     flex-shrink:0;
 }
-
-.ticket-main{
-    flex:1;
-    min-width:0;
-}
-
-.ticket-name{
-    font-weight:800;
-    font-size:15px;
-    margin-bottom:5px;
-}
-
-.ticket-meta{
-    color:#aaa;
-    font-size:12px;
-    line-height:1.5;
-}
-
-.ticket-amount{
-    font-size:16px;
-    font-weight:900;
-}
-
+.ticket-main{flex:1;min-width:0}
+.ticket-name{font-weight:800;font-size:15px;margin-bottom:5px}
+.ticket-meta{color:#aaa;font-size:12px;line-height:1.5}
+.ticket-amount{font-size:16px;font-weight:900}
 .badge{
     display:inline-block;
     margin-top:7px;
@@ -137,7 +84,6 @@ body::before{
     background:rgba(255,255,255,.1);
     font-size:11px;
 }
-
 .delete-link{
     display:inline-block;
     margin-top:8px;
@@ -146,7 +92,6 @@ body::before{
     text-decoration:none;
     font-weight:700;
 }
-
 input,select,textarea{
     width:100%;
     padding:14px;
@@ -158,14 +103,8 @@ input,select,textarea{
     outline:none;
     font-family:inherit;
 }
-
-textarea{
-    min-height:86px;
-    resize:vertical;
-}
-
+textarea{min-height:86px;resize:vertical}
 select option{color:#000}
-
 button{
     width:100%;
     padding:14px;
@@ -177,63 +116,50 @@ button{
     font-weight:900;
     cursor:pointer;
 }
-
-.setting-row,.log-item{
+button.sub{
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.14);
+}
+.log-item{
     padding:14px 0;
     border-bottom:1px solid rgba(255,255,255,.08);
 }
-
-.setting-row{
+.log-item:last-child{border-bottom:0}
+.log-title{font-weight:800;font-size:14px}
+.log-sub{margin-top:4px;color:#888;font-size:12px}
+.empty{color:#aaa;font-size:13px;line-height:1.6}
+.ocr-text{
+    white-space:pre-wrap;
+    color:#ddd;
+    font-size:12px;
+    line-height:1.5;
+    max-height:180px;
+    overflow:auto;
+}
+.candidate{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    gap:14px;
+    gap:10px;
+    padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,.08);
 }
-
-.setting-row:last-child,
-.log-item:last-child{
-    border-bottom:0;
+.candidate:last-child{border-bottom:0}
+.candidate-value{
+    font-size:18px;
+    font-weight:900;
 }
-
-.setting-title,.log-title{
-    font-weight:800;
-    font-size:14px;
-}
-
-.setting-sub,.log-sub{
-    margin-top:4px;
+.candidate-raw{
     color:#888;
+    font-size:11px;
+    margin-top:4px;
+}
+.use-btn{
+    width:auto;
+    padding:9px 12px;
     font-size:12px;
-    line-height:1.5;
-}
-
-.toggle{
-    width:44px;
-    height:24px;
     border-radius:999px;
-    background:#ff8f4c;
-    position:relative;
-    cursor:pointer;
-    flex-shrink:0;
 }
-
-.toggle-circle{
-    position:absolute;
-    top:3px;
-    left:23px;
-    width:18px;
-    height:18px;
-    border-radius:50%;
-    background:white;
-    transition:.2s;
-}
-
-.empty{
-    color:#aaa;
-    font-size:13px;
-    line-height:1.6;
-}
-
 .bottom-nav{
     position:fixed;
     left:50%;
@@ -250,7 +176,6 @@ button{
     border:1px solid rgba(255,255,255,.1);
     backdrop-filter:blur(18px);
 }
-
 .nav-item{
     text-align:center;
     color:#aaa;
@@ -259,7 +184,6 @@ button{
     font-size:11px;
     cursor:pointer;
 }
-
 .nav-item.active{
     background:rgba(255,145,70,.24);
     color:white;
@@ -274,11 +198,10 @@ button{
 
 <div class="header">
     <h1>株主優待管理</h1>
-    <p>残高・期限を手入力でまとめて管理</p>
+    <p>残高・期限・スクショOCRで管理</p>
 </div>
 
 <div id="home" class="section active">
-
     <div class="summary">
         <div class="card">
             <div class="summary-label">合計残高</div>
@@ -294,15 +217,12 @@ button{
     </div>
 
     <div class="section-title">期限アラート</div>
-
     <div class="card empty">
         登録した優待券は、期限が近い順に「優待」タブへ表示されます。
     </div>
-
 </div>
 
 <div id="tickets" class="section">
-
     <div class="section-title">優待一覧</div>
 
     {% if tickets %}
@@ -319,15 +239,10 @@ button{
 
             <div class="ticket-main">
                 <div class="ticket-name">{{ ticket.company }}</div>
-
                 <div class="ticket-meta">
                     期限：{{ ticket.expire_date if ticket.expire_date else "未設定" }}<br>
                     カテゴリ：{{ ticket.category }}<br>
-                    {% if ticket.memo %}
-                    メモ：{{ ticket.memo }}
-                    {% else %}
-                    メモ：なし
-                    {% endif %}
+                    メモ：{{ ticket.memo if ticket.memo else "なし" }}
                 </div>
 
                 <div class="badge">登録済み</div>
@@ -344,18 +259,15 @@ button{
         {% endfor %}
     {% else %}
         <div class="card empty">
-            まだ優待券が登録されていません。<br>
-            下のフォームから追加してください。
+            まだ優待券が登録されていません。
         </div>
     {% endif %}
 
     <div class="section-title">手入力で追加</div>
 
     <form class="card" method="POST" action="/add">
-        <input type="text" name="company" placeholder="会社名・優待名" required>
-
-        <input type="number" name="balance" placeholder="残高・金額" required>
-
+        <input id="companyInput" type="text" name="company" placeholder="会社名・優待名" required>
+        <input id="balanceInput" type="number" name="balance" placeholder="残高・金額" required>
         <input type="date" name="expire_date">
 
         <select name="category">
@@ -366,15 +278,48 @@ button{
             <option>その他</option>
         </select>
 
-        <textarea name="memo" placeholder="メモ 例：父の分 / アプリ内残高 / 使用条件など"></textarea>
+        <textarea name="memo" placeholder="メモ 例：Toyota Wallet / Vポイント / dポイントなど"></textarea>
 
         <button type="submit">優待券を追加</button>
     </form>
+</div>
 
+<div id="ocr" class="section">
+    <div class="section-title">スクショOCR</div>
+
+    <form class="card" method="POST" action="/ocr" enctype="multipart/form-data">
+        <input type="file" name="screenshot" accept="image/*" required>
+        <button type="submit">スクショから残高を読み取る</button>
+    </form>
+
+    {% if ocr_candidates %}
+    <div class="section-title">読み取り候補</div>
+
+    <div class="card">
+        {% for c in ocr_candidates %}
+        <div class="candidate">
+            <div>
+                <div class="candidate-value">{{ c.display }}</div>
+                <div class="candidate-raw">{{ c.raw }}</div>
+            </div>
+
+            <button class="use-btn" type="button" onclick="useAmount('{{ c.value }}')">
+                使う
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if ocr_text %}
+    <div class="section-title">OCR全文</div>
+    <div class="card">
+        <div class="ocr-text">{{ ocr_text }}</div>
+    </div>
+    {% endif %}
 </div>
 
 <div id="logs" class="section">
-
     <div class="section-title">履歴</div>
 
     <div class="card">
@@ -386,47 +331,9 @@ button{
             </div>
             {% endfor %}
         {% else %}
-            <div class="empty">
-                まだ履歴はありません。
-            </div>
+            <div class="empty">まだ履歴はありません。</div>
         {% endif %}
     </div>
-
-</div>
-
-<div id="settings" class="section">
-
-    <div class="section-title">設定</div>
-
-    <div class="card">
-        <div class="setting-row">
-            <div>
-                <div class="setting-title">期限通知</div>
-                <div class="setting-sub">期限が近い優待を通知します</div>
-            </div>
-
-            <div class="toggle" id="notificationToggle">
-                <div class="toggle-circle"></div>
-            </div>
-        </div>
-
-        <div class="setting-row">
-            <div>
-                <div class="setting-title">保存先</div>
-                <div class="setting-sub">Supabase PostgreSQL に保存中</div>
-            </div>
-            <div style="color:#76f2a4;font-size:12px;font-weight:900;">接続中</div>
-        </div>
-
-        <div class="setting-row">
-            <div>
-                <div class="setting-title">メール取込</div>
-                <div class="setting-sub">現在は未使用。手入力管理モードです。</div>
-            </div>
-            <div style="color:#ffb36b;font-size:12px;font-weight:900;">OFF</div>
-        </div>
-    </div>
-
 </div>
 
 </div>
@@ -434,8 +341,8 @@ button{
 <div class="bottom-nav">
     <div class="nav-item active" data-target="home">🏠<br>ホーム</div>
     <div class="nav-item" data-target="tickets">🎫<br>優待</div>
+    <div class="nav-item" data-target="ocr">📷<br>OCR</div>
     <div class="nav-item" data-target="logs">📝<br>履歴</div>
-    <div class="nav-item" data-target="settings">⚙️<br>設定</div>
 </div>
 
 <script>
@@ -458,21 +365,23 @@ document.querySelectorAll(".nav-item").forEach(item=>{
     });
 });
 
-const toggle = document.getElementById("notificationToggle");
-const circle = toggle.querySelector(".toggle-circle");
-let enabled = true;
+function useAmount(value){
+    document.querySelectorAll(".section").forEach(section=>{
+        section.classList.remove("active");
+    });
 
-toggle.addEventListener("click",()=>{
-    enabled = !enabled;
+    document.querySelectorAll(".nav-item").forEach(nav=>{
+        nav.classList.remove("active");
+    });
 
-    if(enabled){
-        toggle.style.background = "#ff8f4c";
-        circle.style.left = "23px";
-    }else{
-        toggle.style.background = "#555";
-        circle.style.left = "3px";
-    }
-});
+    document.getElementById("tickets").classList.add("active");
+    document.querySelector('[data-target="tickets"]').classList.add("active");
+
+    document.getElementById("balanceInput").value = value;
+    document.getElementById("companyInput").focus();
+
+    window.scrollTo({top:document.body.scrollHeight, behavior:"smooth"});
+}
 </script>
 
 </body>
